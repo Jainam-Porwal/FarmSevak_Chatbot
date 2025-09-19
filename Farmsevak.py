@@ -3,10 +3,10 @@ from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
+from dotenv import load_dotenv
 import os
 
-# Hugging Face API token
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = "your_huggingface_token"
+load_dotenv()
 
 # Load model
 llm = HuggingFaceEndpoint(repo_id="google/flan-t5-large")

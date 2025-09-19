@@ -4,3 +4,5 @@ sentence-transformers
 requests
 pydantic
 streamlit
+python-dotenv
+

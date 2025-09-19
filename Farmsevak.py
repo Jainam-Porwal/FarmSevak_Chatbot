@@ -9,7 +9,7 @@ import os
 load_dotenv()
 
 # Load model
-llm = HuggingFaceEndpoint(repo_id="deepseek-ai/DeepSeek-V3.1")
+llm = HuggingFaceEndpoint(repo_id="openai/gpt-oss-20b")
 model = ChatHuggingFace(llm=llm)
 parser = StrOutputParser()
 

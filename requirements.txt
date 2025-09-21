@@ -5,4 +5,4 @@ requests
 pydantic
 streamlit
 python-dotenv
-
+deep_translator

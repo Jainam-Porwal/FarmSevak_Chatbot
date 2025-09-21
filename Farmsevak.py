@@ -62,56 +62,33 @@ st.set_page_config(page_title="🌾 FarmSevak Chatbot", page_icon="🌱")
 
 st.image("Farm sevak.jpg", width=150)
 
-# Default language
-if "language" not in st.session_state:
-    st.session_state.language = "English"
+# Sidebar language selection
+st.sidebar.header("🌐 Language")
+selected_lang = st.sidebar.selectbox("Choose Language", list(lang_map.keys()))
+st.session_state.language = selected_lang
+target = lang_map[st.session_state.language]
 
-# Language buttons
-col1, col2, col3, col4, col5 = st.columns(5)
-new_lang = st.session_state.language
+def tr(text):
+    return translate_text(text, target)
 
-with col1:
-    if st.button("English"):
-        new_lang = "English"
-with col2:
-    if st.button("हिंदी"):
-        new_lang = "Hindi"
-with col3:
-    if st.button("ગુજરાતી"):
-        new_lang = "Gujarati"
-with col4:
-    if st.button("मराठी"):
-        new_lang = "Marathi"
-with col5:
-    if st.button("ଓଡ଼ିଆ"):
-        new_lang = "Odia"
-
-# Refresh translations if language changed
-if new_lang != st.session_state.language or "translations" not in st.session_state:
-    st.session_state.language = new_lang
-    target = lang_map[st.session_state.language]
-
-    def tr(text):
-        return translate_text(text, target)
-
-    # FarmSevak stays in English always ✅
-    st.session_state.translations = {
-        "title": "🌾 FarmSevak",
-        "subtitle": tr("Your multilingual farming assistant 🌱"),
-        "ask": tr("Ask your farming question..."),
-        "selected_lang": tr("✅ Selected Language:")
-    }
+# FarmSevak stays in English always ✅
+translations = {
+    "title": "🌾 FarmSevak",
+    "subtitle": tr("Your multilingual farming assistant 🌱"),
+    "ask": tr("Ask your farming question..."),
+    "selected_lang": tr("✅ Selected Language:")
+}
 
 # Show UI
-st.title(st.session_state.translations["title"])
-st.write(st.session_state.translations["subtitle"])
-st.write(f"{st.session_state.translations['selected_lang']} {st.session_state.language}")
+st.title(translations["title"])
+st.write(translations["subtitle"])
+st.write(f"{translations['selected_lang']} {st.session_state.language}")
 
 # ---------------- Chat ----------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [SystemMessage(content="You are a farmer assistant.")]
 
-user_input = st.chat_input(st.session_state.translations["ask"])
+user_input = st.chat_input(translations["ask"])
 
 if user_input:
     # Translate user input → English
@@ -126,7 +103,7 @@ if user_input:
     # Translate back to farmer’s language
     if st.session_state.language != "English":
         try:
-            translated_result = translate_text(result, lang_map[st.session_state.language])
+            translated_result = translate_text(result, target)
         except Exception:
             translated_result = f"(⚠ Translation failed, showing English)\n\n{result}"
     else:

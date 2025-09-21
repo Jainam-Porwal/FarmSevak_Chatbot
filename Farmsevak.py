@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 import os
-from deep_translator import GoogleTranslator   # ✅ Deep Translator
+from deep_translator import GoogleTranslator
 
 load_dotenv()
 
@@ -17,20 +17,6 @@ lang_map = {
     "Marathi": "mr",
     "Odia": "or"
 }
-
-# ---------------- Helper Translator ----------------
-def t(text: str) -> str:
-    """Translate UI text into the selected language."""
-    try:
-        if "language" in st.session_state and st.session_state.language != "English":
-            return GoogleTranslator(
-                source="en",
-                target=lang_map[st.session_state.language]
-            ).translate(text)
-        else:
-            return text
-    except Exception:
-        return text
 
 # ---------------- LLM Setup ----------------
 llm = HuggingFaceEndpoint(repo_id="openai/gpt-oss-20b")
@@ -55,15 +41,38 @@ chain = prompt | model | parser
 st.set_page_config(page_title="🌾 FarmSevak Chatbot", page_icon="🌱")
 
 st.image("Farm sevak.jpg", width=150)
-st.title(t("🌾 FarmSevak"))
-st.write(t("Your multilingual farming assistant 🌱"))
 
-# Language selection
-st.subheader(t("🌐 Select Language"))
-col1, col2, col3, col4, col5 = st.columns(5)
+# Default language
 if "language" not in st.session_state:
     st.session_state.language = "English"
 
+# Pre-translate static UI text when language changes
+if "translations" not in st.session_state or st.session_state.last_lang != st.session_state.language:
+    target = lang_map[st.session_state.language]
+    def tr(text):
+        if target == "en":
+            return text
+        try:
+            return GoogleTranslator(source="en", target=target).translate(text)
+        except Exception:
+            return text
+
+    st.session_state.translations = {
+        "title": tr("🌾 FarmSevak"),
+        "subtitle": tr("Your multilingual farming assistant 🌱"),
+        "select_lang": tr("🌐 Select Language"),
+        "ask": tr("Ask your farming question..."),
+        "selected_lang": tr("✅ Selected Language:")
+    }
+    st.session_state.last_lang = st.session_state.language
+
+# Show UI
+st.title(st.session_state.translations["title"])
+st.write(st.session_state.translations["subtitle"])
+st.subheader(st.session_state.translations["select_lang"])
+
+# Language buttons
+col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
     if st.button("English"):
         st.session_state.language = "English"
@@ -80,17 +89,16 @@ with col5:
     if st.button("ଓଡ଼ିଆ"):
         st.session_state.language = "Odia"
 
-st.write(t(f"✅ Selected Language: {st.session_state.language}"))
+st.write(f"{st.session_state.translations['selected_lang']} {st.session_state.language}")
 
 # ---------------- Chat ----------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [SystemMessage(content="You are a farmer assistant.")]
 
-# Chat input
-user_input = st.chat_input(t("Ask your farming question..."))
+user_input = st.chat_input(st.session_state.translations["ask"])
 
 if user_input:
-    # Translate user input → English for LLM
+    # Translate user input → English
     if st.session_state.language != "English":
         try:
             translated_input = GoogleTranslator(
@@ -101,20 +109,19 @@ if user_input:
     else:
         translated_input = user_input
 
-    # Store user input (as typed by user)
     st.session_state.chat_history.append(HumanMessage(content=user_input))
 
-    # Get LLM answer in English
+    # Get LLM answer (English, ≤150 words)
     result = chain.invoke({"question": translated_input})
 
-    # Translate LLM output → chosen language
+    # Translate answer → target language
     if st.session_state.language != "English":
         try:
             translated_result = GoogleTranslator(
                 source="en", target=lang_map[st.session_state.language]
             ).translate(result)
         except Exception:
-            translated_result = f"(⚠ {t('Translation failed, showing English')})\n\n{result}"
+            translated_result = f"(⚠ Translation failed, showing English)\n\n{result}"
     else:
         translated_result = result
 

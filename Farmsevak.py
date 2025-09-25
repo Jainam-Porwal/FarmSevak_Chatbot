@@ -73,7 +73,7 @@ def tr(text):
 
 # FarmSevak stays in English always ✅
 translations = {
-    "title": "🌾 FarmSevak",
+    "title": "🌾 FarmSevak Chatbot",
     "subtitle": tr("Your multilingual farming assistant 🌱"),
     "ask": tr("Ask your farming question..."),
     "selected_lang": tr("✅ Selected Language:")
